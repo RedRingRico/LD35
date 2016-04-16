@@ -1,7 +1,8 @@
 ###############################################################################
-#                   Red Ring Rico's Ludum Dare #35 Entry Makefile [Linux x86] #
+#                 Red Ring Rico's Ludum Dare #35 Entry Makefile [Windows x86] #
 ###############################################################################
 .SILENT:
+
 ifndef TOPDIR
 export TOPDIR		:= $(shell cd ../../ && pwd)
 export TOPSRC		= $(TOPDIR)/Source
@@ -12,10 +13,10 @@ SOURCEDIR	= Source ../Common/Source ../Libs/hashlib2plus/Source
 
 PROJECT := RRR_LD35
 TARGET := $(PROJECT)
-OUTFILE	=	$(TARGETDIR)/$(TARGET)
+OUTFILE	=	$(TARGETDIR)/$(TARGET)_$(GCCVER)
 
-PLATFORM		:= Linux
-BUILD_PLATFORM	:= LINUX
+PLATFORM		:= Windows
+BUILD_PLATFORM	:= WINDOWS
 BUILD_ARCH		:= X86
 ARCH			:= x86
 BITSIZE			:= 32
@@ -31,33 +32,38 @@ BUILD_TYPE := debug
 UNAME			= $(shell uname)
 UNAME_MACHINE	= $(shell uname -m)
 
-ifeq ($(UNAME), Linux)
+ifneq (,$(findstring CYGWIN_NT,$(UNAME)))
 	CPPFLAGS_EXT	= -ffriend-injection -std=c++11
 ##### Check for forced 32-bit or 64-bit builds ################################
 ifneq ($(64BIT), False)
 	ARCH		=	x86
 	BITSIZE		=	64
+	TOOLCHAIN_PREFIX = x86_64-w64-mingw32-
 else
 ifneq ($(32BIT), False)
 	ARCH		= x86
 	BITSIZE		= 32
+	TOOLCHAIN_PREFIX = i686-w64-mingw32-
 else
 ##### Nothing forced.  Use what the machine reports ###########################
 ifeq ($(UNAME_MACHINE), x86_64)
 	ARCH		=	x86
 	BITSIZE		=	64
+	TOOLCHAIN_PREFIX = x86_64-w64-mingw32-
 endif
 ifeq ($(UNAME_MACHINE), i686)
 	ARCH		= x86
 	BITSIZE		= 32
+	TOOLCHAIN_PREFIX = i686-w64-mingw32-
 endif
 endif
 endif
 endif
 
-CPP = g++
+CPP = $(TOOLCHAIN_PREFIX)g++
 
-CPPFLAGS	=	-c -m$(BITSIZE) -DLD_BUILD_$(BUILD_DEF) \
+CPPFLAGS	=	-c -DWIN32 -D_WINDOWS -D_UNICODE -DUNICODE \
+				-m$(BITSIZE) -DLD_BUILD_$(BUILD_DEF) \
 				-DLD_PLATFORM_$(BUILD_PLATFORM) \
 				-DLD_PLATFORM_$(BUILD_PLATFORM)_$(BUILD_ARCH) \
 				-DLD_PLATFORM_$(BUILD_PLATFORM)_$(BUILD_ARCH)_$(BITSIZE) \
@@ -67,10 +73,10 @@ CPPFLAGS	=	-c -m$(BITSIZE) -DLD_BUILD_$(BUILD_DEF) \
 				-I$(TOPSRC)/Libs/rapidjson/include
 SYSIPATH	=
 INCPATH		=
-SYSLPATH	=	
+SYSLPATH	=
 LIBPATH		=
-SYSLIBS		=	-lX11 -lGL -lXrandr -lrt -pthread -lXi -lSDL2 -lSDL2_ttf -lGLEW
-LINKFLAGS	=
+SYSLIBS		=	-pthread -lglew32 -lopengl32 -lkernel32 -lgdi32 -luser32 -lmingw32 -lSDL2main -lSDL2
+LINKFLAGS	=	-Wl,--subsystem,windows
 
 ##### Debug #######
 debug:		BUILD		= Debug
@@ -107,7 +113,7 @@ $(TOPSRC)/Common/Headers/GitVersion.hpp:
 	@printf "%s" "------------------------- Generating Version Information ---"
 	@printf "%s\n" "-------------------"
 	@mkdir -p $(TOPSRC)/Common/Headers
-	@sh $(TOPSRC)/Common/GitVersion.sh $(TOPSRC)/Common/Headers/GitVersion.hpp LD
+	@sh $(TOPSRC)/Common/GitVersion.sh $(TOPSRC)/Common/Headers/GitVersion.hpp $(PROJECT)
 	@printf "%s" "------------------------------------------------------------"
 	@printf "%s\n" "-------------------"
 
@@ -143,7 +149,7 @@ $(TARGET): $(OBJS)
 	@printf "%s" "------------------------------------------------------------"
 	@printf "%s\n\n" "-------------------"
 	@printf "Creating: $(OUTFILE)... "
-	@$(CPP) -o $(OUTFILE) $(LINKFLAGS) -m$(BITSIZE) $(OBJS) $(SYSLPATH) \
+	@$(CPP) $(LINKFLAGS)  -o $(OUTFILE) -m$(BITSIZE) $(OBJS) $(SYSLPATH) \
 	$(LIBPATH) $(LIBS) $(SYSLIBS) 2> lmsgs;\
 	RETVAL=$$?;\
 	if env | grep -q ^TERM=; then\
@@ -165,7 +171,7 @@ $(TARGET): $(OBJS)
 	fi
 
 %.o: %.cpp
-	@printf "Compiling: $<... "
+	printf "Compiling: $<... "
 	$(CPP) -MMD -MP -MF $*.d $(CPPFLAGS) $(SYSIPATH) $(INCPATH) \
 	$< -o $@ 2> $*.cmsgs;\
 	RETVAL=$$?;\

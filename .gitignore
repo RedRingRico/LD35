@@ -39,9 +39,6 @@ local.properties
 *.swo
 *.swn
 *.vim
-*.tga~
-*.png~
-*.blend1
 
 # Temporary Blender files #
 *.blend*
@@ -56,10 +53,11 @@ local.properties
 
 # Git version header #
 GitVersion.hpp
-CLOC.hpp
 
 # LaTeX temporary files
 *.aux
 *.log
 *.toc
 
+# Misc #
+*~

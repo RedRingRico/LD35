@@ -1,0 +1,12 @@
+{
+	"shader": {
+		"source": [
+			{ "type": "vertex", "path": "Content/Cooked/Shaders/TexturedSimple.vsh" },
+			{ "type": "fragment", "path": "Content/Cooked/Shaders/TexturedSimple.fsh" }
+		]
+	},
+	"texture": [
+		{ "type": "albedo", "path": "Content/Cooked/Textures/Biohazard.tga" }
+	]
+}
+
